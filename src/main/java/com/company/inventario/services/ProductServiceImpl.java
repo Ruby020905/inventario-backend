@@ -142,6 +142,9 @@ public class ProductServiceImpl implements IProductService {
 	@Override
 	@Transactional
 	public ResponseEntity<ProductResponseRest> deleteById(Long id){
+		if (categoryDao.existsById(id)) {
+            categoryDao.deleteById(id);
+        }
 		ProductResponseRest response = new ProductResponseRest();
 		try {
 			
