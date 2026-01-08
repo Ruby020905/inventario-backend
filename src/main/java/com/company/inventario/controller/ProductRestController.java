@@ -16,9 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.company.inventario.model.Product;
+import com.company.inventario.response.CategoryResponseRest;
 import com.company.inventario.response.ProductResponseRest;
 import com.company.inventario.services.IProductService;
+import com.company.inventory.util.CategoryExcelExporter;
+import com.company.inventory.util.ProductExcelExporter;
 import com.company.inventory.util.Util;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RequestMapping("/api/v1")
@@ -132,6 +137,32 @@ public class ProductRestController {
 				ResponseEntity<ProductResponseRest> response = productService.update(product, categoryID, id);
 				return response;
 		
+	}
+	/***
+	 * export product in excel file
+	 * @param response
+	 * @throws IOException
+	 */
+	
+	@GetMapping("/products/export/excel")
+	public void exportToExcel(HttpServletResponse response) throws IOException {
+	    
+	    // 1. MIME Type correcto para archivos .xlsx
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+	    
+	    // 2. Configuración de descarga: Usar ";" y "=" con extensión .xlsx
+	    String headerKey = "Content-Disposition";
+	    String headerValue = "attachment; filename=productos_reporte.xlsx";
+	    response.setHeader(headerKey, headerValue);
+	    
+	    // 3. Obtención de datos con validación básica
+		ResponseEntity<ProductResponseRest> products = productService.search();
+	    
+	        ProductExcelExporter excelExporter = new ProductExcelExporter(
+	        		products.getBody().getProduct().getProducts());
+	        
+	        excelExporter.export(response);
+	    
 	}
 	
 }

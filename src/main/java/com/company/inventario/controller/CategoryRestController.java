@@ -1,5 +1,7 @@
 package com.company.inventario.controller;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.company.inventario.model.Category;
 import com.company.inventario.response.CategoryResponseRest;
 import com.company.inventario.services.ICategoryService;
+import com.company.inventory.util.CategoryExcelExporter;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
@@ -81,5 +86,31 @@ public class CategoryRestController {
 		ResponseEntity<CategoryResponseRest> response = service.deleteById(id);
 		return response;
 	}
+	/***
+	 * export to excel file
+	 * @param respons
+	 * @throws IOException
+	 */
 	
+	@GetMapping("/categories/export/excel")
+	public void exportToExcel(HttpServletResponse response) throws IOException {
+	    
+	    // 1. MIME Type correcto para archivos .xlsx
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+	    
+	    // 2. Configuración de descarga: Usar ";" y "=" con extensión .xlsx
+	    String headerKey = "Content-Disposition";
+	    String headerValue = "attachment; filename=categorias_reporte.xlsx";
+	    response.setHeader(headerKey, headerValue);
+	    
+	    // 3. Obtención de datos con validación básica
+	    ResponseEntity<CategoryResponseRest> categoryResponse = service.search();
+	    
+	    if (categoryResponse != null && categoryResponse.getBody() != null) {
+	        CategoryExcelExporter excelExporter = new CategoryExcelExporter(
+	                categoryResponse.getBody().getCategoryResponse().getCategory());
+	        
+	        excelExporter.export(response);
+	    }
+	}
 }
